@@ -17,7 +17,7 @@ pip install b62
 ```python
 import b62
 
-encoded = b62.encode(b'Hello!')
+encoded = b62.encode(15000)
 decoded = b62.decode(encoded)
 print(encoded, decoded)
 ```
