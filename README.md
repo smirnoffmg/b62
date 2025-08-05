@@ -13,29 +13,15 @@
 
 ## Installation
 
-### From PyPI (Recommended)
+### From PyPI
+
 ```bash
 pip install b62
 ```
 
-### From Source
-```bash
-git clone https://github.com/yourusername/b62.git
-cd b62
-pip install -e .
-```
-
-### Development Setup
-```bash
-git clone https://github.com/yourusername/b62.git
-cd b62
-uv sync
-make build_package
-```
-
 ## Usage
 
-### Basic Usage
+
 ```python
 import b62
 
@@ -72,42 +58,52 @@ b62 is built with Rust for maximum performance:
 ## API Reference
 
 ### `b62.encode(num: int) -> str`
+
 Encodes an integer to Base62 string representation.
 
 **Parameters:**
+
 - `num` (int): Integer to encode (must be non-negative)
 
 **Returns:**
+
 - `str`: Base62 encoded string
 
 **Raises:**
+
 - `OverflowError`: If the integer is too large for u64
 
 ### `b62.decode(s: str) -> int`
 Decodes a Base62 string back to an integer.
 
 **Parameters:**
+
 - `s` (str): Base62 string to decode
 
 **Returns:**
+
 - `int`: Decoded integer
 
 **Raises:**
+
 - `ValueError`: If the string contains invalid Base62 characters
 
 ## Development
 
 ### Running Tests
+
 ```bash
 make test
 ```
 
 ### Code Quality
+
 ```bash
 make ci
 ```
 
 ### Building
+
 ```bash
 make build_package
 ```
@@ -121,6 +117,7 @@ make build_package
 5. Open a Pull Request
 
 ### Development Guidelines
+
 - Follow PEP 8 style guidelines
 - Add tests for new functionality
 - Update documentation as needed
@@ -133,6 +130,7 @@ MIT License - free and open for all! 🎉
 ## Why b62?
 
 Keep your integer conversions speedy and stylish! Perfect for:
+
 - URL shortening
 - Database ID encoding
 - Compact data serialization

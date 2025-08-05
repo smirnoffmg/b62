@@ -21,9 +21,11 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  prepare:
     runs-on: ubuntu-latest
-
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_name: ${{ steps.version.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,6 +55,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump version and create tag
+        id: version
         run: |
           echo "Manual workflow dispatch detected"
           echo "Version: ${{ github.event.inputs.version }}"
@@ -94,25 +97,12 @@ jobs:
           # Create tag
           git tag -a "$tag_name" -m "Release $tag_name"
           echo "Created tag $tag_name"
-          echo "TAG_CREATED=true" >> $GITHUB_ENV
-          echo "VERSION=$version" >> $GITHUB_ENV
-          echo "TAG_NAME=$tag_name" >> $GITHUB_ENV
+          
+          # Set outputs for other jobs
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
         env:
           CI: true
-
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      - name: Build package
-        run: |
-          # Build wheels for multiple platforms using maturin
-          uv run maturin build --release --target x86_64-unknown-linux-gnu
-          uv run maturin build --release --target x86_64-apple-darwin
-          uv run maturin build --release --target aarch64-apple-darwin
-          uv run maturin build --release --target x86_64-pc-windows-msvc
 
       - name: Set up remote with token
         run: |
@@ -123,7 +113,7 @@ jobs:
       - name: Push tag to remote
         run: |
           # Use the tag name from the previous step
-          tag_name="${{ env.TAG_NAME }}"
+          tag_name="${{ steps.version.outputs.tag_name }}"
           echo "Pushing tag $tag_name to remote..."
 
           # Try to push the tag, with retry logic
@@ -147,6 +137,70 @@ jobs:
           done
         env:
           CI: true
+
+  build:
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Verify Python installation
+        run: |
+          python --version
+          which python
+
+      - name: Build wheel
+        run: |
+          uv run maturin build --release -i python
+          ls -la target/wheels/
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels-${{ matrix.os }}
+          path: target/wheels/
+          retention-days: 1
+
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: wheels/
+
+      - name: Move wheels to dist directory
+        run: |
+          mkdir -p dist
+          # Move all wheels from subdirectories to dist/
+          find wheels/ -name "*.whl" -exec cp {} dist/ \;
+          ls -la dist/
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

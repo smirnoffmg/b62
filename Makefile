@@ -35,24 +35,12 @@ clean:
 
 # Build wheel for distribution (current platform)
 build-wheel:
-	uv run maturin build --release
+	uv run maturin build --release -i python
 
-# Build wheels for multiple platforms (for PyPI release)
-build-wheels:
-	uv run maturin build --release --target x86_64-unknown-linux-gnu
-	uv run maturin build --release --target x86_64-apple-darwin
-	uv run maturin build --release --target aarch64-apple-darwin
-	uv run maturin build --release --target x86_64-pc-windows-msvc
-
-# Build universal wheel (if possible)
-build-universal:
-	uv run maturin build --release --universal2
-
-# Build for PyPI release (recommended for releases)
+# Build wheel for PyPI release (current platform)
 build-release:
-	uv run maturin build --release --target x86_64-unknown-linux-gnu
-	uv run maturin build --release --target x86_64-apple-darwin
-	uv run maturin build --release --target aarch64-apple-darwin
+	uv run maturin build --release -i python
+
 
 # Build and install in development mode
 dev: build_package
