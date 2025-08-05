@@ -36,7 +36,7 @@ jobs:
         run: uv sync
 
       - name: Build and install Rust Python extension
-        run: maturin develop --release
+        run: uv run maturin develop --release
 
       - name: Run tests
         run: uv run pytest -n auto
