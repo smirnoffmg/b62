@@ -43,12 +43,6 @@ jobs:
         with:
           version: "latest"
 
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Run tests
-        run: uv run pytest -n auto
-
       - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
@@ -169,18 +163,13 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Verify Python installation
-        run: |
-          python --version
-          which python
-
       - name: Build wheel
         run: |
           uv run maturin build --release -i python
           ls -la target/wheels/
 
       - name: Upload wheel artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
           path: target/wheels/
@@ -191,7 +180,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all wheel artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: wheels/
 
@@ -200,7 +189,6 @@ jobs:
           mkdir -p dist
           # Move all wheels from subdirectories to dist/
           find wheels/ -name "*.whl" -exec cp {} dist/ \;
-          ls -la dist/
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

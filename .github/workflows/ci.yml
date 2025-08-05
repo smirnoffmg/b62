@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  ci:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -34,13 +34,27 @@ jobs:
         toolchain: stable
         override: true
 
-    - name: Cache dependencies
+    - name: Cache uv cache
       uses: actions/cache@v3
       with:
         path: |
+          ~/.cache/uv
           .venv
+        key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-${{ matrix.python-version }}-
+          ${{ runner.os }}-uv-
+
+    - name: Cache Rust dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
           target
-        key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '**/Cargo.toml') }}
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
 
     - name: Install dependencies
       run: |
@@ -51,97 +65,24 @@ jobs:
       run: |
         uv run pytest -v
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.12"
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v2
-      with:
-        version: "latest"
-
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-
-    - name: Install dependencies
-      run: |
-        uv sync
-        uv run maturin develop
-
     - name: Run linting
       run: |
         uv run ruff check --fix
         uv run ruff format --check
 
-  security:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.12"
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v2
-      with:
-        version: "latest"
-
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-
-    - name: Install dependencies
-      run: |
-        uv sync
-        uv run maturin develop
-
     - name: Run security checks
       run: |
         uv run safety check
-        uv run bandit -r src/ -f json -o bandit-report.json || true
+        uv run bandit -r src/
 
-  build:
-    runs-on: ubuntu-latest
-    needs: [test, lint, security]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.12"
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v2
-      with:
-        version: "latest"
-
-    - name: Install Rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-
-    - name: Build wheel
+    - name: Build wheel (main branch only)
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         uv run maturin build --release
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+    - name: Upload artifacts (main branch only)
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v4
       with:
-        name: wheels
+        name: wheels-${{ matrix.os }}-${{ matrix.python-version }}
         path: target/wheels/
