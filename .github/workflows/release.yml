@@ -1,0 +1,144 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 0.1.0)"
+        required: true
+        default: "0.1.0"
+      release_type:
+        description: "Type of release"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for version detection
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests
+        run: uv run pytest -n auto
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version and create tag
+        run: |
+          echo "Manual workflow dispatch detected"
+          echo "Version: ${{ github.event.inputs.version }}"
+          echo "Release type: ${{ github.event.inputs.release_type }}"
+
+          # Set the specific version if provided
+          if [ "${{ github.event.inputs.version }}" != "0.1.0" ]; then
+            echo "Setting version to ${{ github.event.inputs.version }}"
+            python scripts/version.py set "${{ github.event.inputs.version }}"
+          else
+            # Bump version based on release type
+            echo "Bumping version with type: ${{ github.event.inputs.release_type }}"
+            python scripts/version.py bump "${{ github.event.inputs.release_type }}"
+          fi
+
+          # Get the new version
+          version=$(python scripts/version.py current --version-only)
+          tag_name="v$version"
+
+          # Check if tag already exists and bump version if needed
+          while git rev-parse "$tag_name" >/dev/null 2>&1; do
+            echo "Tag $tag_name already exists. Bumping version..."
+            python scripts/version.py bump patch
+            version=$(python scripts/version.py current --version-only)
+            tag_name="v$version"
+            echo "New version: $version"
+          done
+
+          # Validate version format
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "Error: Invalid version format: $version"
+            exit 1
+          fi
+
+          # Commit version change
+          git add src/b62/__init__.py
+          git commit -m "chore: Bump version to $version" || echo "No changes to commit"
+
+          # Create tag
+          git tag -a "$tag_name" -m "Release $tag_name"
+          echo "Created tag $tag_name"
+          echo "TAG_CREATED=true" >> $GITHUB_ENV
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "TAG_NAME=$tag_name" >> $GITHUB_ENV
+        env:
+          CI: true
+
+      - name: Build package
+        run: uv build
+
+      - name: Set up remote with token
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+        env:
+          CI: true
+
+      - name: Push tag to remote
+        run: |
+          # Use the tag name from the previous step
+          tag_name="${{ env.TAG_NAME }}"
+          echo "Pushing tag $tag_name to remote..."
+
+          # Try to push the tag, with retry logic
+          max_attempts=3
+          attempt=1
+
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts to push tag $tag_name"
+            if git push origin "$tag_name"; then
+              echo "Successfully pushed tag $tag_name"
+              break
+            else
+              echo "Failed to push tag on attempt $attempt"
+              if [ $attempt -eq $max_attempts ]; then
+                echo "All attempts failed. Exiting."
+                exit 1
+              fi
+              attempt=$((attempt + 1))
+              sleep 2
+            fi
+          done
+        env:
+          CI: true
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
