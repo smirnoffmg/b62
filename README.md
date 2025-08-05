@@ -1,2 +1,29 @@
 # b62
-b62 — Your trusty companion for Base62 encoding and decoding, written in both Python and Rust! Fast, reliable, and ready to tame your alphanumeric chaos. Whether you're coding late or early, b62 keeps your data neat and compact. 
+
+🎉 A lightning-fast, zero-dependency and friendly Base62 encoder/decoder for Python! Tame your data with style and a smile.
+
+## Features
+⚡ Super quick Base62 encoding & decoding
+🧩 Easy to use and integrate
+
+## Installation
+
+```bash
+pip install b62
+```
+
+## Usage
+
+```python
+import b62
+
+encoded = b62.encode(b'Hello!')
+decoded = b62.decode(encoded)
+print(encoded, decoded)
+```
+
+## Why b62?
+Keep your data compact, your apps fast, and your spirits high! 😄
+
+## License
+MIT – Free for everyone!
