@@ -24,6 +24,10 @@ lint:
 install-dev:
 	uv sync
 
+# Build wheel for local testing (using uv)
+build-wheel-local:
+	uv run maturin build --release -i python
+
 # Clean build artifacts
 clean:
 	rm -rf target/
