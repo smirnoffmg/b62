@@ -19,6 +19,10 @@ fn to_base62(mut num: u64) -> String {
 }
 
 fn from_base62(s: &str) -> Option<u64> {
+    if s.is_empty() {
+        return None;
+    }
+    
     let mut num: u64 = 0;
     for c in s.bytes() {
         num = num.checked_mul(62)?;
@@ -40,12 +44,27 @@ fn encode(num: u64) -> PyResult<String> {
 
 #[pyfunction]
 fn decode(s: &str) -> PyResult<u64> {
-    from_base62(s).ok_or_else(|| pyo3::exceptions::PyValueError::new_err("Invalid Base62 string"))
+    if s.is_empty() {
+        return Err(pyo3::exceptions::PyValueError::new_err("Empty string cannot be decoded"));
+    }
+    
+    from_base62(s).ok_or_else(|| {
+        // Provide more specific error messages
+        if s.chars().any(|c| !c.is_alphanumeric()) {
+            pyo3::exceptions::PyValueError::new_err(format!("Invalid character in Base62 string: '{}'", s))
+        } else {
+            pyo3::exceptions::PyValueError::new_err(format!("Invalid Base62 string: '{}'", s))
+        }
+    })
 }
 
 #[pymodule]
 fn b62(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(encode, m)?)?;
     m.add_function(wrap_pyfunction!(decode, m)?)?;
+    
+    // Add module docstring
+    m.add("__doc__", "High-performance Base62 encoder/decoder for Python")?;
+    
     Ok(())
 }

@@ -100,8 +100,19 @@ jobs:
         env:
           CI: true
 
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
       - name: Build package
-        run: uv build
+        run: |
+          # Build wheels for multiple platforms using maturin
+          uv run maturin build --release --target x86_64-unknown-linux-gnu
+          uv run maturin build --release --target x86_64-apple-darwin
+          uv run maturin build --release --target aarch64-apple-darwin
+          uv run maturin build --release --target x86_64-pc-windows-msvc
 
       - name: Set up remote with token
         run: |

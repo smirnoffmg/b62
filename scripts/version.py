@@ -8,7 +8,6 @@ This script helps manage semantic versioning automatically.
 import re
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
 
 
 def get_current_version() -> str:
@@ -32,7 +31,7 @@ def update_version(version: str) -> None:
     print(f"Updated version to {version}")
 
 
-def parse_version(version: str) -> Tuple[int, int, int, Optional[str]]:
+def parse_version(version: str) -> tuple[int, int, int, str | None]:
     """Parse semantic version string."""
     # Handle pre-release versions like 1.0.0-alpha.1
     match = re.match(r"(\d+)\.(\d+)\.(\d+)(?:-(.+))?", version)
