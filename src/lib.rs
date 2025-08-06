@@ -1,21 +1,25 @@
 use pyo3::prelude::*;
 
-
 const BASE62_CHARS: &[u8; 62] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const MAX_BASE62_LENGTH: usize = 13; // Maximum length for u64 in Base62 is 13
 
 fn to_base62(mut num: u64) -> String {
     if num == 0 {
         return "0".to_string();
     }
 
-    let mut result = Vec::new();
+    let mut result = [0u8; MAX_BASE62_LENGTH];
+    let mut index = MAX_BASE62_LENGTH;
+
     while num > 0 {
         let rem = (num % 62) as usize;
-        result.push(BASE62_CHARS[rem]);
+        index -= 1;
+        result[index] = BASE62_CHARS[rem];
         num /= 62;
     }
-    result.reverse();
-    String::from_utf8(result).unwrap()
+
+    // Convert the relevant part of the array to a string
+    String::from_utf8(result[index..].to_vec()).unwrap()
 }
 
 fn from_base62(s: &str) -> Option<u64> {
@@ -47,11 +51,12 @@ fn decode(s: &str) -> PyResult<u64> {
     if s.is_empty() {
         return Err(pyo3::exceptions::PyValueError::new_err("Empty string cannot be decoded"));
     }
-    
+
     from_base62(s).ok_or_else(|| {
         // Provide more specific error messages
-        if s.chars().any(|c| !c.is_alphanumeric()) {
-            pyo3::exceptions::PyValueError::new_err(format!("Invalid character in Base62 string: '{}'", s))
+        let invalid_chars: Vec<char> = s.chars().filter(|&c| !c.is_alphanumeric()).collect();
+        if !invalid_chars.is_empty() {
+            pyo3::exceptions::PyValueError::new_err(format!("Invalid characters in Base62 string: '{}'", invalid_chars.iter().collect::<String>()))
         } else {
             pyo3::exceptions::PyValueError::new_err(format!("Invalid Base62 string: '{}'", s))
         }

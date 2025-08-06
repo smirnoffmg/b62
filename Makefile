@@ -30,6 +30,8 @@ build-wheel-local:
 
 # Clean build artifacts
 clean:
+	uv clean
+	cargo clean
 	rm -rf target/
 	rm -rf dist/
 	rm -rf build/
