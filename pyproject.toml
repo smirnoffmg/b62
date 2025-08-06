@@ -1,6 +1,6 @@
 [project]
 name = "b62"
-version = "0.1.0"
+version = "1.0.0"
 description = "A lightning-fast, zero-dependency Base62 encoder/decoder for Python"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -9,7 +9,7 @@ authors = [{ name = "Maksim Smirnov", email = "smirnoffmg@gmail.com" }]
 license = { text = "MIT" }
 keywords = ["base62", "encoding", "decoding", "url-shortening", "performance"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
