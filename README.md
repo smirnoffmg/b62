@@ -1,6 +1,9 @@
 # b62
 
 ![PyPI version](https://img.shields.io/pypi/v/b62.svg)
+![Python Version](https://img.shields.io/pypi/pyversions/b62.svg)
+![Total downloads](https://static.pepy.tech/badge/b62)
+![License](https://img.shields.io/pypi/l/b62.svg)
 ![Build Status](https://github.com/smirnoffmg/b62/actions/workflows/ci.yml/badge.svg)
 
 🎉 A lightning-fast, zero-dependency and friendly Base62 encoder/decoder for Python! Tame your data with style and a smile.
