@@ -85,14 +85,18 @@ jobs:
             echo "New version: $version"
           done
 
+          # Show changes
+          echo ""
+
           # Commit version change
           git add pyproject.toml
           git commit -m "Release $tag_name"
+          git push origin main
 
           # Create and push tag
           git tag -a "$tag_name" -m "Release $tag_name"
           echo "Created tag $tag_name"
-          gh repo sync
+          git push origin main
 
           # Set outputs for other jobs
           echo "version=$version" >> $GITHUB_OUTPUT
