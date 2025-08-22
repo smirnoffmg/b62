@@ -11,24 +11,24 @@ from pathlib import Path
 
 
 def get_current_version() -> str:
-    """Get the current version from __init__.py."""
-    init_file = Path("src/b62/__init__.py")
-    content = init_file.read_text()
-    match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', content)
+    """Get the current version from pyproject.toml."""
+    pyproject = Path("pyproject.toml")
+    content = pyproject.read_text()
+    match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
     if not match:
-        raise ValueError("Could not find __version__ in __init__.py")
+        raise ValueError("Could not find version in pyproject.toml")
     return match.group(1)
 
 
 def update_version(version: str) -> None:
-    """Update the version in __init__.py."""
-    init_file = Path("src/b62/__init__.py")
-    content = init_file.read_text()
+    """Update the version in pyproject.toml."""
+    pyproject = Path("pyproject.toml")
+    content = pyproject.read_text()
     new_content = re.sub(
-        r'__version__\s*=\s*["\'][^"\']+["\']', f'__version__ = "{version}"', content
+        r'^(version\s*=\s*")[^"]+(".*)$', f"\1{version}\2", content, flags=re.MULTILINE
     )
-    init_file.write_text(new_content)
-    print(f"Updated version to {version}")
+    pyproject.write_text(new_content)
+    print(f"Updated version to {version} in pyproject.toml")
 
 
 def parse_version(version: str) -> tuple[int, int, int, str | None]:
@@ -140,9 +140,7 @@ def main():
                 sys.exit(1)
 
             # Create and push tag
-            subprocess.run(
-                ["git", "add", "src/python_redis_factory/__init__.py"], check=True
-            )
+            subprocess.run(["git", "add", "pyproject.toml"], check=True)
             subprocess.run(
                 ["git", "commit", "-m", f"chore: Bump version to {version}"], check=True
             )
