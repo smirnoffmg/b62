@@ -85,13 +85,13 @@ jobs:
           fi
 
           # Commit version change
-          git add src/b62/__init__.py
+          git add pyproject.toml
           git commit -m "chore: Bump version to $version" || echo "No changes to commit"
 
           # Create tag
           git tag -a "$tag_name" -m "Release $tag_name"
           echo "Created tag $tag_name"
-          
+
           # Set outputs for other jobs
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
