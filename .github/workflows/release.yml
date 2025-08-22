@@ -47,13 +47,15 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          gh auth setup-git
+          gh repo sync
+        env:
+          CI: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Bump version and create tag
         id: version
         run: |
-          gh auth setup-git
-          gh repo sync
-
           echo "Manual workflow dispatch detected"
           echo "Version: ${{ github.event.inputs.version }}"
           echo "Release type: ${{ github.event.inputs.release_type }}"
@@ -116,6 +118,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Pull latest changes
+        run: |
+          git pull origin ${{ github.ref_name }}
 
       - name: Build wheel
         uses: PyO3/maturin-action@v1
