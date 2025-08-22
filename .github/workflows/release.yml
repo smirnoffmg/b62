@@ -84,53 +84,23 @@ jobs:
             exit 1
           fi
 
-          # Commit version change
+          # Commit version change and push
           git add pyproject.toml
           git commit -m "chore: Bump version to $version" || echo "No changes to commit"
+          gh auth setup-git
+          gh repo sync
 
-          # Create tag
+          # Create and push tag
           git tag -a "$tag_name" -m "Release $tag_name"
           echo "Created tag $tag_name"
+          gh repo sync
 
           # Set outputs for other jobs
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
         env:
           CI: true
-
-      - name: Set up remote with token
-        run: |
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-        env:
-          CI: true
-
-      - name: Push tag to remote
-        run: |
-          # Use the tag name from the previous step
-          tag_name="${{ steps.version.outputs.tag_name }}"
-          echo "Pushing tag $tag_name to remote..."
-
-          # Try to push the tag, with retry logic
-          max_attempts=3
-          attempt=1
-
-          while [ $attempt -le $max_attempts ]; do
-            echo "Attempt $attempt of $max_attempts to push tag $tag_name"
-            if git push origin "$tag_name"; then
-              echo "Successfully pushed tag $tag_name"
-              break
-            else
-              echo "Failed to push tag on attempt $attempt"
-              if [ $attempt -eq $max_attempts ]; then
-                echo "All attempts failed. Exiting."
-                exit 1
-              fi
-              attempt=$((attempt + 1))
-              sleep 2
-            fi
-          done
-        env:
-          CI: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     needs: prepare
