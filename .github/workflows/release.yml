@@ -96,7 +96,7 @@ jobs:
           # Create and push tag
           git tag -a "$tag_name" -m "Release $tag_name"
           echo "Created tag $tag_name"
-          git push origin main
+          git push origin tag "$tag_name"
 
           # Set outputs for other jobs
           echo "version=$version" >> $GITHUB_OUTPUT
