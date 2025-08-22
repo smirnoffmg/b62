@@ -51,6 +51,9 @@ jobs:
       - name: Bump version and create tag
         id: version
         run: |
+          gh auth setup-git
+          gh repo sync
+
           echo "Manual workflow dispatch detected"
           echo "Version: ${{ github.event.inputs.version }}"
           echo "Release type: ${{ github.event.inputs.release_type }}"
@@ -85,10 +88,6 @@ jobs:
           # Commit version change
           git add pyproject.toml
           git commit -m "Release $tag_name"
-
-          # Push changes
-          gh auth setup-git
-          gh repo sync
 
           # Create and push tag
           git tag -a "$tag_name" -m "Release $tag_name"
