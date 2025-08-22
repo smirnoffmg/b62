@@ -84,6 +84,7 @@ jobs:
 
           # Commit version change
           git add pyproject.toml
+          git commit -m "Release $tag_name"
 
           # Push changes
           gh auth setup-git
