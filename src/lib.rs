@@ -1,4 +1,5 @@
 use pyo3::prelude::*;
+mod batch;
 
 const BASE62_CHARS: &[u8; 62] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const MAX_BASE62_LENGTH: usize = 13; // Maximum length for u64 in Base62 is 13
@@ -67,9 +68,9 @@ fn decode(s: &str) -> PyResult<u64> {
 fn b62(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(encode, m)?)?;
     m.add_function(wrap_pyfunction!(decode, m)?)?;
-    
+    m.add_function(wrap_pyfunction!(batch::encode_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(batch::decode_batch, m)?)?;
     // Add module docstring
     m.add("__doc__", "High-performance Base62 encoder/decoder for Python")?;
-    
     Ok(())
 }

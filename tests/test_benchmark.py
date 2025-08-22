@@ -2,9 +2,8 @@
 Performance benchmarks for b62 library using pytest-benchmark.
 """
 
-import pytest
-
 import b62
+import pytest
 
 
 @pytest.mark.benchmark
@@ -20,6 +19,37 @@ def test_encode_small_numbers(benchmark):
     assert result[0] == "0"
     assert result[61] == "z"
     assert result[62] == "10"
+
+
+@pytest.mark.benchmark
+def test_encode_batch_small_numbers(benchmark):
+    """Benchmark batch encoding small numbers (0-999)."""
+    numbers = list(range(1000))
+
+    def encode_batch():
+        return b62.encode_batch(numbers)
+
+    result = benchmark(encode_batch)
+    assert len(result) == 1000
+    assert result[0] == "0"
+    assert result[61] == "z"
+    assert result[62] == "10"
+
+
+@pytest.mark.benchmark
+def test_decode_batch_small_numbers(benchmark):
+    """Benchmark batch decoding small numbers."""
+    numbers = list(range(1000))
+    strings = b62.encode_batch(numbers)
+
+    def decode_batch():
+        return b62.decode_batch(strings)
+
+    result = benchmark(decode_batch)
+    assert len(result) == 1000
+    assert result[0] == 0
+    assert result[61] == 61
+    assert result[62] == 62
 
 
 @pytest.mark.benchmark
@@ -47,6 +77,32 @@ def test_encode_large_numbers(benchmark):
 
     result = benchmark(encode_large)
     assert len(result) == len(numbers)
+
+
+@pytest.mark.benchmark
+def test_encode_batch_large_numbers(benchmark):
+    """Benchmark batch encoding large numbers."""
+    numbers = [2**i for i in range(10, 64, 4)]
+
+    def encode_batch():
+        return b62.encode_batch(numbers)
+
+    result = benchmark(encode_batch)
+    assert len(result) == len(numbers)
+
+
+@pytest.mark.benchmark
+def test_decode_batch_large_numbers(benchmark):
+    """Benchmark batch decoding large numbers."""
+    numbers = [2**i for i in range(10, 64, 4)]
+    strings = b62.encode_batch(numbers)
+
+    def decode_batch():
+        return b62.decode_batch(strings)
+
+    result = benchmark(decode_batch)
+    assert len(result) == len(numbers)
+    assert result == numbers
 
 
 @pytest.mark.benchmark
@@ -88,6 +144,62 @@ def test_encode_mixed_numbers(benchmark):
 
     result = benchmark(encode_mixed)
     assert len(result) == len(numbers)
+
+
+@pytest.mark.benchmark
+def test_encode_batch_mixed_numbers(benchmark):
+    """Benchmark batch encoding mixed number sizes."""
+    numbers = [
+        0,
+        1,
+        10,
+        61,
+        62,
+        123,
+        1000,
+        10000,
+        100000,
+        1000000,
+        2**16,
+        2**32,
+        2**48,
+        2**63 - 1,
+    ]
+
+    def encode_batch():
+        return b62.encode_batch(numbers)
+
+    result = benchmark(encode_batch)
+    assert len(result) == len(numbers)
+
+
+@pytest.mark.benchmark
+def test_decode_batch_mixed_numbers(benchmark):
+    """Benchmark batch decoding mixed number sizes."""
+    numbers = [
+        0,
+        1,
+        10,
+        61,
+        62,
+        123,
+        1000,
+        10000,
+        100000,
+        1000000,
+        2**16,
+        2**32,
+        2**48,
+        2**63 - 1,
+    ]
+    strings = b62.encode_batch(numbers)
+
+    def decode_batch():
+        return b62.decode_batch(strings)
+
+    result = benchmark(decode_batch)
+    assert len(result) == len(numbers)
+    assert result == numbers
 
 
 @pytest.mark.benchmark

@@ -56,22 +56,32 @@ assert original == decoded  # Always True!
 
 b62 is built with Rust for maximum performance and delivers exceptional speed:
 
+
+
 ### Benchmark Results
 
 **Single Operations (nanoseconds per operation):**
-- **Decode large string**: ~113ns (8,872 ops/sec)
-- **Encode large number**: ~203ns (4,934 ops/sec)
-- **Decode edge cases**: ~396ns (2,525 ops/sec)
-- **Encode edge cases**: ~796ns (1,256 ops/sec)
 
-**Batch Operations (100,000 operations):**
-- **Encoding**: ~0.014s (7.2M ops/sec)
-- **Decoding**: ~0.020s (5.1M ops/sec)
-- **Round-trip**: ~0.033s (3.0M ops/sec)
+- **Decode single large string**: ~52ns (19,300 Kops/sec)
+- **Encode single large number**: ~90ns (11,100 Kops/sec)
+- **Decode edge cases**: ~190ns (5,270 Kops/sec)
+- **Encode edge cases**: ~408ns (2,450 Kops/sec)
+- **Decode small numbers**: ~26,500ns (37.7 Kops/sec)
+- **Encode small numbers**: ~59,300ns (16.9 Kops/sec)
+
+**Batch Operations (parallel, per operation):**
+
+- **Batch decode small numbers**: ~44,000ns (22.7 Kops/sec)
+- **Batch encode small numbers**: ~49,500ns (20.2 Kops/sec)
+- **Batch decode large numbers**: ~848ns (1,180 Kops/sec)
+- **Batch encode large numbers**: ~1,059ns (944 Kops/sec)
+- **Batch decode mixed numbers**: ~749ns (1,335 Kops/sec)
+- **Batch encode mixed numbers**: ~885ns (1,130 Kops/sec)
 
 **Performance Characteristics:**
-- **Encoding**: ~10-15x faster than pure Python implementations
-- **Decoding**: ~15-20x faster than pure Python implementations
+
+- **Batch operations**: Use all CPU cores for maximum throughput (parallelized with Rayon)
+- **Encoding/Decoding**: Much faster than pure Python implementations
 - **Memory**: Minimal memory footprint with zero allocations for small numbers
 - **CPU**: Optimized for both small and large integers
 - **Scalability**: Consistent performance across number ranges (0 to 2^63-1)
@@ -86,38 +96,56 @@ The library uses a highly optimized Rust implementation with PyO3 bindings:
 - **Type Safety**: Full type annotations and runtime validation
 - **Memory Management**: Zero-copy operations where possible
 
-## API Reference
 
-### `b62.encode(num: int) -> str`
+## Batch Operations
 
-Encodes an integer to Base62 string representation.
+For high-throughput scenarios, b62 provides batch operations that leverage parallel processing for maximum speed:
 
-**Parameters:**
-
-- `num` (int): Integer to encode (must be non-negative)
-
-**Returns:**
-
-- `str`: Base62 encoded string
-
-**Raises:**
-
-- `OverflowError`: If the integer is too large for u64
-
-### `b62.decode(s: str) -> int`
-Decodes a Base62 string back to an integer.
+### `b62.encode_batch(nums: list[int]) -> list[str]`
+Encodes a list of integers to Base62 strings in parallel.
 
 **Parameters:**
 
-- `s` (str): Base62 string to decode
+- `nums` (list[int]): List of integers to encode (must be non-negative)
 
 **Returns:**
-
-- `int`: Decoded integer
+- `list[str]`: List of Base62 encoded strings
 
 **Raises:**
+- `OverflowError`: If any integer is too large for u64
 
-- `ValueError`: If the string contains invalid Base62 characters
+**Example:**
+```python
+import b62
+numbers = [1, 62, 123456789]
+encoded = b62.encode_batch(numbers)
+print(encoded)  # Output: ['1', '10', '8M0kX']
+```
+
+### `b62.decode_batch(strings: list[str]) -> list[int]`
+Decodes a list of Base62 strings back to integers in parallel.
+
+**Parameters:**
+- `strings` (list[str]): List of Base62 strings to decode
+
+**Returns:**
+- `list[int]`: List of decoded integers
+
+**Raises:**
+- `ValueError`: If any string contains invalid Base62 characters
+
+**Example:**
+```python
+import b62
+strings = ['1', '10', '8M0kX']
+decoded = b62.decode_batch(strings)
+print(decoded)  # Output: [1, 62, 123456789]
+```
+
+**Performance Note:**
+Batch operations are highly optimized and use all available CPU cores for parallel processing, making them ideal for large datasets or performance-critical applications.
+
+---
 
 ## Development
 
