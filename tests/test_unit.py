@@ -1,6 +1,5 @@
-import pytest
-
 import b62
+import pytest
 
 
 @pytest.mark.parametrize(

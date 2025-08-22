@@ -1,7 +1,6 @@
+import b62
 from hypothesis import given
 from hypothesis import strategies as st
-
-import b62
 
 
 @given(st.integers(min_value=0, max_value=2**63 - 1))
