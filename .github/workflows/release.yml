@@ -55,38 +55,37 @@ jobs:
           echo "Version: ${{ github.event.inputs.version }}"
           echo "Release type: ${{ github.event.inputs.release_type }}"
 
-          # Set the specific version if provided
+          # Get initial version for logging
+          old_version=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "Current version: $old_version"
+
+          # Update version based on input
           if [ "${{ github.event.inputs.version }}" != "0.1.0" ]; then
             echo "Setting version to ${{ github.event.inputs.version }}"
-            python scripts/version.py set "${{ github.event.inputs.version }}"
+            uv version --frozen "${{ github.event.inputs.version }}"
           else
-            # Bump version based on release type
             echo "Bumping version with type: ${{ github.event.inputs.release_type }}"
-            python scripts/version.py bump "${{ github.event.inputs.release_type }}"
+            uv version --frozen --bump "${{ github.event.inputs.release_type }}"
           fi
 
-          # Get the new version
-          version=$(python scripts/version.py current --version-only)
+          # Get and validate new version
+          version=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
           tag_name="v$version"
+          echo "Version updated from $old_version to $version"
 
-          # Check if tag already exists and bump version if needed
+          # Check if tag exists and bump if needed
           while git rev-parse "$tag_name" >/dev/null 2>&1; do
-            echo "Tag $tag_name already exists. Bumping version..."
-            python scripts/version.py bump patch
-            version=$(python scripts/version.py current --version-only)
+            echo "Tag $tag_name already exists. Bumping patch version..."
+            uv version --frozen --bump patch
+            version=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
             tag_name="v$version"
             echo "New version: $version"
           done
 
-          # Validate version format
-          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
-            echo "Error: Invalid version format: $version"
-            exit 1
-          fi
-
-          # Commit version change and push
+          # Commit version change
           git add pyproject.toml
-          git commit -m "chore: Bump version to $version" || echo "No changes to commit"
+
+          # Push changes
           gh auth setup-git
           gh repo sync
 
