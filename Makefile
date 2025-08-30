@@ -1,17 +1,18 @@
-.PHONY: build_package test ci clean benchmark format lint install-dev
+.PHONY: build test ci clean format lint
 
 # Build the package in development mode
-build_package:
+build:
 	uv run maturin develop
 
 # Run all tests
-test: build_package
+test: build
 	uv run pytest -s -v
 
-# Code quality checks
-ci: build_package
+# Code quality checks (CI)
+ci: build
 	uv run ruff check --fix
 	rustfmt --check src/*.rs
+	cargo clippy -- -W clippy::pedantic -D warnings
 
 # Format code
 format:
@@ -21,49 +22,16 @@ format:
 # Lint code
 lint:
 	uv run ruff check .
-
-# Format Rust code only
-format-rust:
-	rustfmt src/*.rs
-
-# Check Rust formatting only
-check-rust:
-	rustfmt --check src/*.rs
-
-# Install development dependencies
-install-dev:
-	uv sync
-
-# Build wheel for local testing (using uv)
-build-wheel-local:
-	uv run maturin build --release -i python
+	cargo clippy -- -W clippy::pedantic
 
 # Clean build artifacts
 clean:
 	uv clean
 	cargo clean
-	rm -rf target/
-	rm -rf dist/
-	rm -rf build/
-	rm -rf *.egg-info/
+	rm -rf target/ dist/ build/ *.egg-info/
 	find . -type d -name __pycache__ -delete
 	find . -type f -name "*.pyc" -delete
 
-# Build wheel for distribution (current platform)
+# Build wheel for distribution
 build-wheel:
 	uv run maturin build --release -i python
-
-# Build wheel for PyPI release (current platform)
-build-release:
-	uv run maturin build --release -i python
-
-
-# Build and install in development mode
-dev: build_package
-
-# Quick test (skip property-based tests)
-test-quick: build_package
-	uv run pytest tests/test_unit.py -s -v
-
-# Run all checks (build, test, lint, type check)
-check: build_package test ci

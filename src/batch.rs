@@ -6,7 +6,19 @@ use rayon::prelude::*;
 
 const MAX_BATCH_SIZE: usize = 1_000_000; // Prevent memory exhaustion
 
-/// Batch encode a list of u64 numbers to Base62 strings (parallelized)
+/// Batch encode a list of u64 numbers to Base62 strings (parallelized).
+///
+/// # Arguments
+///
+/// * `nums` - Vector of u64 numbers to encode
+///
+/// # Returns
+///
+/// Vector of Base62 string representations
+///
+/// # Errors
+///
+/// Returns a `PyValueError` if the batch size exceeds the maximum allowed size.
 #[pyfunction]
 pub fn encode_batch(nums: Vec<u64>) -> PyResult<Vec<String>> {
     // Input validation
@@ -24,7 +36,20 @@ pub fn encode_batch(nums: Vec<u64>) -> PyResult<Vec<String>> {
     Ok(nums.into_par_iter().map(to_base62).collect())
 }
 
-/// Batch decode a list of Base62 strings to u64 numbers (parallelized)
+/// Batch decode a list of Base62 strings to u64 numbers (parallelized).
+///
+/// # Arguments
+///
+/// * `strs` - Vector of Base62 strings to decode
+///
+/// # Returns
+///
+/// Vector of decoded u64 numbers
+///
+/// # Errors
+///
+/// Returns a `PyValueError` if the batch size exceeds the maximum allowed size
+/// or if any string contains invalid Base62 characters.
 #[pyfunction]
 pub fn decode_batch(strs: Vec<String>) -> PyResult<Vec<u64>> {
     // Input validation
@@ -44,8 +69,7 @@ pub fn decode_batch(strs: Vec<String>) -> PyResult<Vec<u64>> {
         .map(|(index, s)| {
             from_base62(&s).ok_or_else(|| {
                 pyo3::exceptions::PyValueError::new_err(format!(
-                    "Invalid Base62 string at index {}: '{}'",
-                    index, s
+                    "Invalid Base62 string at index {index}: '{s}'"
                 ))
             })
         })

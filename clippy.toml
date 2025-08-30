@@ -1,0 +1,31 @@
+# Clippy configuration for b62 - High-performance Base62 encoder/decoder
+
+# Performance-focused settings
+cognitive-complexity-threshold = 15  # Lower threshold for performance-critical code
+too-many-lines-threshold = 50        # Shorter functions for better performance
+too-many-arguments-threshold = 5     # Fewer arguments for better performance
+
+# Safety and correctness
+allow-unwrap-in-tests = false        # Don't allow unwrap in tests
+allow-expect-in-tests = false        # Don't allow expect in tests
+allow-panic-in-tests = false         # Don't allow panic in tests
+
+# Documentation requirements
+check-private-items = true           # Check documentation for private items
+missing-docs-allow-unused = true     # Allow undocumented unused items
+
+# Code quality
+disallowed-names = ["foo", "bar", "baz", "quux", ".."]  # Extend default disallowed names
+disallowed-methods = [
+    { path = "std::ptr::null", reason = "Use null_mut() for mutable pointers" }
+]
+
+# Performance optimizations
+trivial-copy-size-limit = 64         # Optimize for small types
+pass-by-value-size-limit = 128       # Pass small types by value
+
+# Constants and magic numbers
+# Note: approx_constant lint is not configurable via clippy.toml
+
+# Error handling
+allow-comparison-to-zero = true      # Allow modulo comparison to zero
