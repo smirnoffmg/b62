@@ -64,7 +64,13 @@ pub fn decode_batch(strs: Vec<String>) -> PyResult<Vec<u64>> {
         )));
     }
 
-    strs.into_par_iter()
+    // Process in parallel but maintain deterministic error reporting
+    let mut results = Vec::with_capacity(strs.len());
+    let mut first_error = None;
+
+    // Process in parallel and collect results
+    let parallel_results: Vec<_> = strs
+        .into_par_iter()
         .enumerate()
         .map(|(index, s)| {
             from_base62(&s).ok_or_else(|| {
@@ -73,7 +79,26 @@ pub fn decode_batch(strs: Vec<String>) -> PyResult<Vec<u64>> {
                 ))
             })
         })
-        .collect()
+        .collect();
+
+    // Check results in order and return first error
+    for result in parallel_results {
+        match result {
+            Ok(value) => results.push(value),
+            Err(e) => {
+                if first_error.is_none() {
+                    first_error = Some(e);
+                }
+                // Continue processing to maintain parallel benefits
+            }
+        }
+    }
+
+    // Return first error if any, otherwise return successful results
+    match first_error {
+        Some(e) => Err(e),
+        None => Ok(results),
+    }
 }
 
 // SIMD prototype: for now, just a batch version. Real SIMD would use packed_simd or std::simd for parallelism.
