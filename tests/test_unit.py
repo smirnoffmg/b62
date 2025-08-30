@@ -169,3 +169,82 @@ def test_case_sensitivity():
     # Verify specific values
     assert b62.decode("a") == 36
     assert b62.decode("A") == 10
+
+
+# Batch operation tests
+def test_encode_batch_basic():
+    """Test basic batch encoding functionality."""
+    numbers = [0, 1, 62, 123456789]
+    expected = ["0", "1", "10", "8M0kX"]
+    result = b62.encode_batch(numbers)
+    assert result == expected
+
+
+def test_decode_batch_basic():
+    """Test basic batch decoding functionality."""
+    strings = ["0", "1", "10", "8M0kX"]
+    expected = [0, 1, 62, 123456789]
+    result = b62.decode_batch(strings)
+    assert result == expected
+
+
+def test_encode_batch_empty():
+    """Test batch encoding with empty list."""
+    result = b62.encode_batch([])
+    assert result == []
+
+
+def test_decode_batch_empty():
+    """Test batch decoding with empty list."""
+    result = b62.decode_batch([])
+    assert result == []
+
+
+def test_encode_batch_large_numbers():
+    """Test batch encoding with large numbers."""
+    numbers = [2**32, 2**48, 2**63 - 1]
+    result = b62.encode_batch(numbers)
+    assert len(result) == 3
+    # Verify round-trip
+    decoded = b62.decode_batch(result)
+    assert decoded == numbers
+
+
+def test_decode_batch_invalid_strings():
+    """Test batch decoding with invalid strings."""
+    strings = ["valid", "invalid!", "also_valid"]
+
+    with pytest.raises(ValueError, match="Invalid Base62 string at index 1"):
+        b62.decode_batch(strings)
+
+
+def test_decode_batch_mixed_valid_invalid():
+    """Test batch decoding with mixed valid and invalid strings."""
+    strings = ["0", "invalid!", "1", "also_invalid@"]
+
+    with pytest.raises(ValueError, match="Invalid Base62 string at index 1"):
+        b62.decode_batch(strings)
+
+
+def test_encode_batch_roundtrip():
+    """Test batch encode/decode roundtrip."""
+    numbers = [0, 1, 10, 61, 62, 123, 2023, 9999999, 2**32, 2**48, 2**63 - 1]
+    encoded = b62.encode_batch(numbers)
+    decoded = b62.decode_batch(encoded)
+    assert decoded == numbers
+
+
+def test_batch_operations_consistency():
+    """Test that batch operations produce same results as individual operations."""
+    numbers = [0, 1, 62, 123456789, 2**32]
+
+    # Individual operations
+    individual_encoded = [b62.encode(n) for n in numbers]
+    individual_decoded = [b62.decode(s) for s in individual_encoded]
+
+    # Batch operations
+    batch_encoded = b62.encode_batch(numbers)
+    batch_decoded = b62.decode_batch(batch_encoded)
+
+    assert batch_encoded == individual_encoded
+    assert batch_decoded == individual_decoded

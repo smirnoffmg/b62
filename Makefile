@@ -11,14 +11,24 @@ test: build_package
 # Code quality checks
 ci: build_package
 	uv run ruff check --fix
+	rustfmt --check src/*.rs
 
 # Format code
 format:
 	uv run ruff format .
+	rustfmt src/*.rs
 
 # Lint code
 lint:
 	uv run ruff check .
+
+# Format Rust code only
+format-rust:
+	rustfmt src/*.rs
+
+# Check Rust formatting only
+check-rust:
+	rustfmt --check src/*.rs
 
 # Install development dependencies
 install-dev:
