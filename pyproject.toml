@@ -1,6 +1,6 @@
 [project]
 name = "b62"
-version = "1.1.2"
+version = "1.1.3"
 description = "A lightning-fast, zero-dependency Base62 encoder/decoder for Python"
 readme = "README.md"
 requires-python = ">=3.12"
