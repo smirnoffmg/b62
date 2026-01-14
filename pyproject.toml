@@ -80,7 +80,16 @@ line-ending = "auto"
 
 
 [tool.bandit]
-exclude_dirs = ["tests"]
+exclude_dirs = [
+    "tests",
+    ".venv",
+    "venv",
+    "env",
+    "target",
+    "build",
+    "dist",
+    "__pycache__",
+]
 skips = ["B101"]
 
 [tool.pytest.ini_options]
