@@ -16,6 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Rust",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: General",
@@ -51,7 +52,7 @@ dev = [
 ]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 88
 
 [tool.ruff.lint]
