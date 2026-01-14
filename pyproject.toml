@@ -49,6 +49,8 @@ dev = [
     "ruff>=0.12.7",
     "safety>=2.3.0",
     "bandit>=1.7.0",
+    "urllib3>=2.6.0",
+    "authlib>=1.6.5",
 ]
 
 [tool.ruff]
@@ -76,6 +78,10 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

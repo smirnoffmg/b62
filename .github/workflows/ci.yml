@@ -72,8 +72,8 @@ jobs:
 
       - name: Run security checks
         run: |
-          uv run safety check
-          uv run bandit -r src/
+          uv run safety scan
+          uv run bandit -c pyproject.toml -r .
 
       - name: Build wheel (main branch only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
