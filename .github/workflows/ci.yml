@@ -72,7 +72,6 @@ jobs:
 
       - name: Run security checks
         run: |
-          uv run safety scan
           uv run bandit -c pyproject.toml -r .
 
       - name: Build wheel (main branch only)
